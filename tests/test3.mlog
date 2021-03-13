@@ -1,0 +1,7 @@
+fn test(obj : Var) ->  {
+
+}
+fn main() {
+  let obj2 : (Var, Var);
+  let obj : Var = obj2;
+}

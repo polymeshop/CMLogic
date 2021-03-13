@@ -1,0 +1,12 @@
+fn main() -> () {
+  let player = radar(@this, Target.player, Target.player, Target.any, 1, Sort.distance);
+  if (player === null) {
+    return;
+  }
+  let playerX = sensor(player, @x);
+  let playerY = sensor(player, @y);
+  for (let linkNum = 0; linkNum < @links; linkNum = linkNum + 1) {
+    controlShoot(getLink(linkNum), playerX, playerY, true);
+  }
+
+}

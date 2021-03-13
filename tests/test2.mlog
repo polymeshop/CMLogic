@@ -1,0 +1,25 @@
+declareLink(foreshadow1);
+
+
+declareInputVar(input1, 123);
+
+
+fn getPos(obj : Var) -> (Var, Var) {
+  return (sensor(obj, @x), sensor(obj, @y));
+}
+// test comment
+/* test multiline comment /) /* abcd /) *( */*/
+fn main() {
+  let input2 = {
+    123;
+  };
+
+  let player = radar(foreshadow1, Target.player, Target.any, Target.any, 1, Sort.distance);
+  if (!(!player === !null)) {
+    end;
+  }
+  let (playerX, playerY) = getPos(player);
+  for (let linkNum = 0; linkNum < @links; linkNum = linkNum + 1) {
+    controlShoot(getLink(linkNum), playerX, playerY, true);
+  }
+}

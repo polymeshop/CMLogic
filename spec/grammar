@@ -1,0 +1,75 @@
+alpha -> 'a'|'b'|'c'|'d'|'e'|'f'|'g'|'h'|'i'|'j'|'k'|'l'|'m'|'n'|'o'|'p'|'q'|'r'|'s'|'t'|'u'|'v'|'w'|'x'|'y'|'z'|'A'|'B'|'C'|'D'|'E'|'F'|'G'|'H'|'I'|'J'|'K'|'L'|'M'|'N'|'O'|'P'|'Q'|'R'|'S'|'T'|'U'|'V'|'W'|'X'|'Y'|'Z'
+underscore -> '_'
+num -> '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9'
+id -> alpha(alpha|underscore|num)*
+atConstant -> '@' alpha (alpha|underscore|num)*
+doubleLit -> double
+stringLit -> '"' ([^"]*|'\\'|'\"')* '"'
+target -> 'Target.' id
+sort -> 'Sort.' id
+buildingGroup -> 'BuildingGroup.' id
+------
+
+literal -> atConstant | doubleLit | stringLit | '(' literal (',' literal)* ')' | 'null' | 'true' | 'false'
+params -> id ':' type (',' id ':' type)*
+paramlist -> '(' params? ')'
+typelist -> '(' (type (',' type)*)? ')'
+type -> 'Var' | typelist
+funcRet -> '->' type
+function -> 'fn' id paramlist funcRet? block
+block -> '{' statement* '}'
+rhsStatement -> (block|expr)
+statement -> (expr|declareStmt|assignStmt|breakStmt|returnStmt|endStmt) ';' |blockStmt|ifThenStmt|ifThenElseStmt|whileStmt|forStmt
+statementWithoutSemicolon -> rhsStatement|declareStmt|assignStmt|breakStmt|returnStmt|endStmt|ifThenStmt|ifThenElseStmt|whileStmt|forStmt
+declareStmt -> 'let' pat (':' type)?  ('=' rhsStatement)?
+assignStmt -> pat '=' rhsStatement
+breakStmt -> 'break'
+returnStmt -> 'return' rhsStatement?
+endStmt -> 'end'
+ifThenStmt -> 'if' '(' expr ')' block
+ifThenElseStmt -> 'if' '(' expr ')' block 'else' block
+whileStmt -> 'while' '(' expr ')'  block
+forStmt -> 'for' '(' statementWithoutSemicolon ';' expr ';' statementWithoutSemicolon ')' block
+
+idOrUnderscore -> id | '_'
+pats -> pat | (',' pat)*
+patlist -> '(' pats' ')'
+pat -> idOrUnderscore | patlist
+linkDeclaration -> 'declareLink' '(' id ')' ';'
+inputVarDeclaration -> 'declareInputVar' '(' id (',' literal)? ')' ';'
+
+
+program -> linkDeclaration* inputVarDeclaration* function*
+-------
+
+expr consists of the following left associative binary operators (and precedence)
++ add 6
+- sub 6
+* mul 7
+/ div 7
+% mod 7
+** pow 8
+== equal 4
+!= notEqual 4
+< lessThan 4
+<= lessThanEq 4
+> greaterThan 4
+>= greaterThanEq 4
+=== strictEqual 4
+!== strictNotEqual 4
+<< shl 5
+>> shr 5
+&& logical and 3
+& bitwise and 7
+|| logical or 3
+| bitwise or 5
+^ xor 6
+
+literals:
+double, @constants, string literal, tuple literal, null, true, false
+
+
+and the following unary operators
+- negation 9
+~ flip (bitwise not) 9
+! logical not 9

@@ -1,0 +1,98 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 88bec64d4032446d79a5794c88f5cb2fbc4e1dec386cabee54e388342f1f493c
+
+name:           CMLogic
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/assembler#readme>
+homepage:       https://github.com/polymeshop/CMLogic#readme
+bug-reports:    https://github.com/polymeshop/CMLogic/issues
+author:         polymesh
+maintainer:     example@example.com
+copyright:      2021 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/polymeshop/CMLogic
+
+library
+  exposed-modules:
+      Data.Endo
+      Main
+      MLogic.Assembly.GenAsm
+      MLogic.Assembly.GenAsm.Types
+      MLogic.Assembly.GenAsm.Utils
+      MLogic.Assembly.Op
+      MLogic.Assembly.Operand
+      MLogic.Assembly.Optimize.MergeLabels
+      MLogic.Assembly.Optimize.Optimize
+      MLogic.Assembly.Optimize.Redundant
+      MLogic.Assembly.Optimize.Types
+      MLogic.Constants
+      MLogic.HighLevel.BuiltinFunctions
+      MLogic.HighLevel.CallGraph
+      MLogic.HighLevel.Codegen
+      MLogic.HighLevel.Parser
+      MLogic.HighLevel.TC
+      MLogic.HighLevel.TC.Types
+      MLogic.HighLevel.Token
+      MLogic.HighLevel.Typed.Types
+      MLogic.HighLevel.Types
+  other-modules:
+      Paths_CMLogic
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wno-type-defaults -Wno-unused-imports
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , containers
+    , mtl
+    , parsec
+  default-language: Haskell2010
+
+executable CMLogic
+  main-is: Main.hs
+  other-modules:
+      Data.Endo
+      MLogic.Assembly.GenAsm
+      MLogic.Assembly.GenAsm.Types
+      MLogic.Assembly.GenAsm.Utils
+      MLogic.Assembly.Op
+      MLogic.Assembly.Operand
+      MLogic.Assembly.Optimize.MergeLabels
+      MLogic.Assembly.Optimize.Optimize
+      MLogic.Assembly.Optimize.Redundant
+      MLogic.Assembly.Optimize.Types
+      MLogic.Constants
+      MLogic.HighLevel.BuiltinFunctions
+      MLogic.HighLevel.CallGraph
+      MLogic.HighLevel.Codegen
+      MLogic.HighLevel.Parser
+      MLogic.HighLevel.TC
+      MLogic.HighLevel.TC.Types
+      MLogic.HighLevel.Token
+      MLogic.HighLevel.Typed.Types
+      MLogic.HighLevel.Types
+      Paths_CMLogic
+  hs-source-dirs:
+      src
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Wno-type-defaults
+  build-depends:
+      CMLogic
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , mtl
+    , parsec
+  default-language: Haskell2010
