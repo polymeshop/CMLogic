@@ -294,8 +294,6 @@ assignLitToAlloc alloc cl = codegenError $ "assignLitToAlloc: unexpected alloc "
 -- should not conflict with variables in the original program
 allocToExpr :: VarAlloc -> Types -> Codegen (Expr SourcePos)
 allocToExpr (AllocVar alloc) ty = do
-  logger <- gets codegenLogger
-  liftIO $ logger $ "allocToExpr: " <> alloc
   modify $ \s -> s { codegenVarMap = M.insert alloc (AllocVar alloc) (codegenVarMap s) }
   return $ Var noLoc (Just ty) alloc
 allocToExpr (AllocTuple allocs) ty@(TupleTy tys) = do
