@@ -189,7 +189,10 @@ lookupPatInsVars (VarPat _ str) = do
   case M.lookup str varMap of
     Just alloc -> return alloc
     Nothing -> codegenError $ "lookupPatInsVars: failed to find variable " <> str <> " in codegenVarMap"
-
+lookupPatInsVars (IgnorePat _) = return AllocIgnore
+lookupPatInsVars (TuplePat _ pats) = do
+  allocs <- mapM lookupPatInsVars pats
+  return $ AllocTuple allocs
 
 getFunCallArgDepth :: FunCallArg loc -> Integer
 getFunCallArgDepth (ExprArg _ expr) = getExprDepth expr
@@ -287,13 +290,32 @@ assignLitToAlloc AllocIgnore _ = return ()
 assignLitToAlloc alloc cl = codegenError $ "assignLitToAlloc: unexpected alloc " <> show alloc <> " and cl " <> show cl <> " combination"
 
 
--- compile expr into depth 0/1 exprs
+-- non ignore VarAllocs can be turned into expr
+-- should not conflict with variables in the original program
+allocToExpr :: VarAlloc -> Types -> Codegen (Expr SourcePos)
+allocToExpr (AllocVar alloc) ty = do
+  logger <- gets codegenLogger
+  liftIO $ logger $ "allocToExpr: " <> alloc
+  modify $ \s -> s { codegenVarMap = M.insert alloc (AllocVar alloc) (codegenVarMap s) }
+  return $ Var noLoc (Just ty) alloc
+allocToExpr (AllocTuple allocs) ty@(TupleTy tys) = do
+  exprs <- sequence $ zipWith allocToExpr allocs tys
+  return $ Tuple noLoc (Just ty) exprs
+allocToExpr _ _ = codegenError "allocToExpr"
+-- compile expr into depth 0 exprs
 codegenExpr' :: Expr SourcePos -> Codegen (Expr SourcePos)
-codegenExpr' e@(Var _ _ _) = return e
+codegenExpr' e@(Var _ (Just ty) v) = do
+  alloc <- lookupPatInsVars (VarPat noLoc v)
+  allocToExpr alloc ty
 codegenExpr' e@(Lit _ _ _) = return e
-codegenExpr' e@(Tuple _ _ _) = return e
+codegenExpr' e@(Tuple _ ty exprs) = do
+  exprs' <- mapM codegenExpr' exprs
+  return $ (Tuple noLoc ty exprs')
 codegenExpr' e = do
-  v1 <- ga G.newVar
+  v1 <- ga G.newVar -- starts with underscore and would not conflict with variable names in the original program
+                    -- important!
+  
+  modify $ \s -> s { codegenVarMap = M.insert v1 (AllocVar v1) (codegenVarMap s) }
   codegenExpr e (AllocVar v1) Nothing
   return (Var noLoc (Just VarTy) v1)
 -- compiler sub expressions to depth 1, and call codegenExpr
@@ -406,7 +428,13 @@ codegenBuiltinNonDepth1CompExpr e _ _ = codegenError $ "unhandled in codegenBuil
 
 varTyExprLeafOperand :: Show loc => Expr loc -> Codegen Operand
 varTyExprLeafOperand (Lit _ _ cl) = varTyLitToOperand cl
-varTyExprLeafOperand (Var _ _ v) = return (G.var v)
+varTyExprLeafOperand (Var _ _ v) = do
+  varMap <- gets codegenVarMap
+  case M.lookup v varMap of
+    Just alloc -> case alloc of
+                    AllocVar alloc -> return (G.var alloc)
+                    _ -> codegenError $ "impossible in varTyExprLeafOperand"
+    Nothing -> codegenError $ "varTyExprLeafOperand: variable " <> v <> " not found in varMap"
 varTyExprLeafOperand e = codegenError $ "varTyExprLeafOperand: expr " <> show e <> " is not a varTyExprLeaf" 
   
 varTyVarAllocGetVar :: VarAlloc -> Codegen String
@@ -1040,7 +1068,9 @@ codegenProgram :: [String] -> [String]
     -> Program SourcePos
     -> Codegen (Map String (Endo [ExtInstr]))
 codegenProgram inputVars linkConstants builtinFuncMap funcSigMap p = do
+  
   modify (\s -> s { codegenInsVarSet = S.fromList (inputVars <> linkConstants)
                   , codegenBuiltinFuncMap = builtinFuncMap
+                  , codegenVarMap = M.fromList $ (map (\s -> (s, AllocVar s))) (inputVars <> linkConstants)
                   , codegenFuncSigMap = funcSigMap })
   codegenFunctions (functions p)  

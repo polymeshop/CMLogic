@@ -59,7 +59,7 @@ newVarWithHint hint = do
       Nothing -> do
         modify $ \s -> s { genAsmVarCounter = M.insert hint 1 genAsmVarCounter }
         return 0
-  let genName = hint <> show varNum
+  let genName = "_" <> hint <> show varNum
   case S.member genName genAsmVars of
     True -> do
       modify $ \s -> s { genAsmVarCounter = M.insert hint (varNum + 1) genAsmVarCounter }
@@ -69,7 +69,7 @@ newVarWithHint hint = do
       return genName
 
 newVar :: (IsInstr i, Monad m) => GenAsmM i m String
-newVar = newVarWithHint "_v"
+newVar = newVarWithHint "v"
 
 newVarInit :: (IsInstr i, Monad m) => Operand -> GenAsmM i m String
 newVarInit op = do
