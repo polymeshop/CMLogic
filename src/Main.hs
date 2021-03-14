@@ -34,6 +34,20 @@ import qualified Data.Set as S
 import Data.Map (Map)
 import qualified Data.Map as M
 
+genInputVarsIns :: [(String, Maybe CL)] -> GenAsm ()
+genInputVarsIns ((varName, lit):xs) = do
+  rhs <- case lit of
+              Just (AtConstant s) -> return (var s)
+              Just (DoubleLit d) -> return (double d)
+              Just (StrLit s) -> return (str s)
+              Just TrueL -> return trueC
+              Just FalseL -> return falseC
+              Just Null -> return nullC
+              Nothing -> return nullC
+              _ -> fail $ "internal error: genInputVarIns: nonVarTyCL: " <> show lit
+  addInstr $ SetI (var varName) rhs
+  genInputVarsIns xs
+genInputVarsIns [] = return ()
 
 genAsmFromExtIns :: Endo [ExtInstr] -> [(String, Endo [ExtInstr])] -> Map String String -> GenAsm ()
 genAsmFromExtIns mainInstr otherFunInstr funcEntry = do
@@ -65,6 +79,7 @@ genAsmFromExtIns mainInstr otherFunInstr funcEntry = do
           addLab entryLab
           addExtInstrs (runEndo funInstrs [])
         Nothing -> fail $ "internal error: genAsmFromExtIns: entry label for function " <> funName <> " not found"
+      aux xs
     aux [] = return ()
 main :: IO ()
 main = do
@@ -118,8 +133,9 @@ main = do
                                                            , genAsmLabVar = labelCounter
                                                            , genAsmInstrs = Endo id
                                                            , genAsmVars = insVarSet }
-                                finalAsmResult = runIdentity $ runGenAsmM
-                                       (genAsmFromExtIns mainInstrs (M.toList nonMainFuncInstrs) entryMap) genAsmInitSt
+                                finalAsmResult = runIdentity $ flip runGenAsmM genAsmInitSt $ do
+                                       genInputVarsIns $ M.toList (tcInputVarMap tcState)
+                                       genAsmFromExtIns mainInstrs (M.toList nonMainFuncInstrs) entryMap 
                             case finalAsmResult of
                               Left genAsmError -> hPutStrLn stderr genAsmError
                               Right (asmSt, ()) ->
