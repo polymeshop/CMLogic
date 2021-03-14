@@ -351,7 +351,7 @@ statement =
                   <|> endStmt)
          semicolon
          return stmt
-      stmt2 = blockStmt <|> ifThenStmt <|> ifThenElseStmt <|> whileStmt <|> forStmt
+      stmt2 = blockStmt <|> try ifThenElseStmt <|> ifThenStmt <|> whileStmt <|> forStmt
       stmt3 = do
         stmt <- exprStmt
         semicolon
@@ -383,8 +383,8 @@ statementWithoutSemicolon = do
    <|> breakStmt
    <|> returnStmt
    <|> endStmt
+   <|> try ifThenElseStmt
    <|> ifThenStmt
-   <|> ifThenElseStmt
    <|> whileStmt
    <|> forStmt
    <|> rhsStatement
