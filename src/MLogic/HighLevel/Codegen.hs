@@ -968,6 +968,7 @@ codegenStmt (ForStmt _ _ init cond step blk) _ breakLab =
     loopEnd <- newLab
     codegenExpr (Not noLoc (Just VarTy) cond) (AllocTuple []) (Just loopEnd)
     codegenBlock blk (AllocTuple []) (Just loopEnd)
+    codegenStmt step (AllocTuple []) (Just loopEnd)
     ga $ G.jumpLabel loopStart
     addLab loopEnd
 codegenStmt (IfThenStmt _ _ cond cons) _ breakLab = do
