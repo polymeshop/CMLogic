@@ -287,155 +287,118 @@ assignLitToAlloc AllocIgnore _ = return ()
 assignLitToAlloc alloc cl = codegenError $ "assignLitToAlloc: unexpected alloc " <> show alloc <> " and cl " <> show cl <> " combination"
 
 
+-- compile expr into depth 0/1 exprs
+codegenExpr' :: Expr SourcePos -> Codegen (Expr SourcePos)
+codegenExpr' e@(Var _ _ _) = return e
+codegenExpr' e@(Lit _ _ _) = return e
+codegenExpr' e@(Tuple _ _ _) = return e
+codegenExpr' e = do
+  v1 <- ga G.newVar
+  codegenExpr e (AllocVar v1) Nothing
+  return (Var noLoc (Just VarTy) v1)
 -- compiler sub expressions to depth 1, and call codegenExpr
 codegenBuiltinNonDepth1CompExpr :: Expr SourcePos -> VarAlloc -> Maybe String -> Codegen ()
 codegenBuiltinNonDepth1CompExpr (FunCallExpr _ ty funName funCallArgs) alloc jumpTarget = do
   newFunCallArgs <- flip mapM funCallArgs $ \funCallArg -> do
                       case funCallArg of
                         ExprArg _ expr -> do
-                          v1 <- ga G.newVar
-                          codegenExpr expr (AllocVar v1) Nothing
-                          return $ ExprArg noLoc (Var noLoc (Just VarTy) v1)
+                          e1 <- codegenExpr' expr
+                          return $ ExprArg noLoc e1
                         _ -> return funCallArg
   codegenExpr (FunCallExpr noLoc ty funName newFunCallArgs) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (Add _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (Add noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (Add noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (Sub _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (Add noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (Add noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (Mul _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (Mul noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (Mul noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (Div _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (Div noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (Div noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (Mod _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (Mod noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (Mod noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (Pow _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (Pow noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (Pow noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (Equal _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (Equal noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (Equal noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (NotEqual _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (NotEqual noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (NotEqual noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (LAnd _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (LAnd noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (LAnd noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (LessThan _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (LessThan noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (LessThan noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (LessThanEq _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (LessThanEq noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (LessThanEq noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (GreaterThan _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (GreaterThan noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (GreaterThan noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (GreaterThanEq _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (GreaterThanEq noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (GreaterThanEq noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (StrictEqual _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (StrictEqual noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (StrictEqual noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (StrictNEq _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (StrictNEq noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (StrictNEq noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (Shl _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (Shl noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (Shl noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (Shr _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (Shr noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (Shr noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (LOr _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (LOr noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (LOr noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (BOr _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (BOr noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (BOr noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (BAnd _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (BAnd noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (BAnd noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (Xor _ _ expr1 expr2) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  v2 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr expr2 (AllocVar v2) Nothing
-  codegenExpr (Xor noLoc (Just VarTy) (Var noLoc (Just VarTy) v1) (Var noLoc (Just VarTy) v2)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  e2 <- codegenExpr' expr2
+  codegenExpr (Xor noLoc (Just VarTy) e1 e2) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (Flip _ _ expr1) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr (Flip noLoc (Just VarTy) (Var noLoc (Just VarTy) v1)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  codegenExpr (Flip noLoc (Just VarTy) e1) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (Not _ _ expr1) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr (Not noLoc (Just VarTy) (Var noLoc (Just VarTy) v1)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  codegenExpr (Not noLoc (Just VarTy) e1) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr (Negate _ _ expr1) alloc jumpTarget = do
-  v1 <- ga G.newVar
-  codegenExpr expr1 (AllocVar v1) Nothing
-  codegenExpr (Negate noLoc (Just VarTy) (Var noLoc (Just VarTy) v1)) alloc jumpTarget
+  e1 <- codegenExpr' expr1
+  codegenExpr (Negate noLoc (Just VarTy) e1) alloc jumpTarget
 codegenBuiltinNonDepth1CompExpr e _ _ = codegenError $ "unhandled in codegenBuiltinNonDepth1CompExpr: " <> show e
 
 
