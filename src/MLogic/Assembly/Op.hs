@@ -230,7 +230,7 @@ instance Show Instr where
   show (RadarI from t1 t2 t3 order sb out) = "radar " <> unwords (map show [t1, t2, t3]) <> " " <> show sb <> " " <>  unwords (map show [from, order, out])
   show (SensorI out obj prop) = "sensor " <> unwords (map show [out, obj, prop])
   show (SetI out val) = "set " <> unwords (map show [out, val])
-  show (OpI op ops) = "op " <> show op <> " " <> unwords (map show ops)
+  show (OpI op ops) = "op " <> op <> " " <> unwords (map show ops)
   show EndI = "end"
   show (JumpI jt cond) = "jump " <> show jt <> " " <> show cond
   show (UBindI op) = "ubind " <> show op
