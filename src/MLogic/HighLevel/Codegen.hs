@@ -623,7 +623,7 @@ codegenExpr expr varAlloc jumpTarget = do
                            oper1 <- varTyExprLeafOperand expr1
                            oper2 <- varTyExprLeafOperand expr2
                            resultVar <- varTyVarAllocGetVar varAlloc
-                           addInstr $ OpI "lor" [G.var resultVar, oper1, oper2]
+                           addInstr $ OpI "or" [G.var resultVar, oper1, oper2]
                          BOr _ _ expr1 expr2 -> do
                            oper1 <- varTyExprLeafOperand expr1
                            oper2 <- varTyExprLeafOperand expr2
