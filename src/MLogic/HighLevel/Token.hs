@@ -30,6 +30,10 @@ alpha = oneOf (['a'..'z'] <> ['A'..'Z'])
 alphaUnderscoreNum :: ParsecT ByteString () IO Char
 alphaUnderscoreNum = oneOf (['a'..'z'] <> ['A'..'Z'] <> "_" <> ['0'..'9'])
 
+alphaScoreNum :: ParsecT ByteString () IO Char
+alphaScoreNum = oneOf (['a'..'z'] <> ['A'..'Z'] <> "-" <> ['0'..'9'])
+
+
 ident :: ParsecT ByteString () IO String
 ident = do
   fc <- alpha
@@ -46,7 +50,7 @@ atConstant = do
   at <- char '@'
   conName <- do
     f <- alpha
-    rest <- many alphaUnderscoreNum
+    rest <- many alphaScoreNum
     return (f:rest)
   return $ AtConstantT (at:conName)
 

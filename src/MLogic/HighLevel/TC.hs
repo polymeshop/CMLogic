@@ -362,7 +362,7 @@ tcStmt (AssignStmt pos _ pat rhs) retTy varInit = do
   return (AssignStmt pos (Just (TupleTy [])) pat checkedRhs, resultVarInit)
 tcStmt (BlockStmt pos _ block) retTy varInit = do
   (checkedBlock, newVarInit) <- tcBlock block retTy varInit
-  return (BlockStmt pos (blockTy checkedBlock) block, newVarInit)
+  return (BlockStmt pos (blockTy checkedBlock) checkedBlock, newVarInit)
 tcStmt (ExprStmt pos _ expr) retTy varInit = do
   checkedExpr <- tcExpr expr varInit
   return (ExprStmt pos (getType checkedExpr) checkedExpr, varInit)
